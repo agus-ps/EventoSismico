@@ -7,12 +7,18 @@ namespace EventoSismicoApp.Entities
         public DateTime? FechaHoraFin { get; set; }
         public DateTime FechaHoraInicio { get; set; }
         public Estado Estado { get; set; }
+        public Empleado EmpleadoResponsable { get; set; }
 
-
-        public CambioEstado(Estado estado, DateTime fechaHoraInicio)
+        public CambioEstado(Estado estado, DateTime fechaHoraInicio, DateTime? fechaHoraFin, Empleado empleado)
         {
-            Estado = estado;
-            FechaHoraInicio = fechaHoraInicio;
+            this.Estado = estado;
+            this.FechaHoraInicio = fechaHoraInicio;
+            this.FechaHoraFin = fechaHoraFin;
+
+            // --- INICIO DE CAMBIO ---
+            // 2. Asignamos el empleado al crearlo
+            this.EmpleadoResponsable = empleado;
+            // --- FIN DE CAMBIO ---
         }
 
         public CambioEstado(Estado estado, DateTime fechaHoraInicio, DateTime? fechaHoraFin)

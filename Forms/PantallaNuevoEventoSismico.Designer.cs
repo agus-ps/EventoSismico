@@ -51,6 +51,7 @@
             rbtConfirmar = new RadioButton();
             groupDetalles = new GroupBox();
             grillaSeries = new DataGridView();
+            btnCancelar = new Button();
             ((System.ComponentModel.ISupportInitialize)grillaEventos).BeginInit();
             groupEventos.SuspendLayout();
             groupModificarDatos.SuspendLayout();
@@ -285,11 +286,22 @@
             grillaSeries.Size = new Size(709, 170);
             grillaSeries.TabIndex = 17;
             // 
+            // btnCancelar
+            // 
+            btnCancelar.Location = new Point(1352, 481);
+            btnCancelar.Name = "btnCancelar";
+            btnCancelar.Size = new Size(163, 23);
+            btnCancelar.TabIndex = 20;
+            btnCancelar.Text = "Cancelar";
+            btnCancelar.UseVisualStyleBackColor = true;
+            btnCancelar.Click += tomarOpcionCancelar;
+            // 
             // PantallaNuevoEventoSismico
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1552, 535);
+            Controls.Add(btnCancelar);
             Controls.Add(groupDetalles);
             Controls.Add(groupGrillaOpciones);
             Controls.Add(groupModificarDatos);
@@ -336,5 +348,6 @@
         private RadioButton rbtConfirmar;
         private GroupBox groupDetalles;
         private DataGridView grillaSeries;
+        private Button btnCancelar;
     }
 }

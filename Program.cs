@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using EventoSismicoApp.Controller;
@@ -30,7 +29,7 @@ namespace EventoSismicoApp
             ApplicationConfiguration.Initialize();
             // Crear y mostrar pantalla principal
             PantallaPrincipal = new PantallaNuevoEventoSismico();
-            Manejador = new ManejadorNuevoEventoSismico(); 
+            Manejador = new ManejadorNuevoEventoSismico();
             Application.Run(PantallaPrincipal);
         }
 
@@ -73,6 +72,9 @@ namespace EventoSismicoApp
             Program.SesionActual = new Sesion(DateTime.Now.AddHours(-1), null, usuarioAnalista);
 
             // 8. Crear eventos sísmicos
+
+            // --- INICIO DE CORRECCIÓN ---
+            // Agregamos el bool 'esAutoDetectado' al constructor
             var evento1 = new EventoSismico(
                 fechaHoraOcurrencia: DateTime.Now.AddHours(-6),
                 latEpicentro: -34.6037,
@@ -80,20 +82,24 @@ namespace EventoSismicoApp
                 latHipocentro: -34.7037,
                 longHipocentro: -58.4816,
                 magnitud: 3.5,
+                esAutoDetectado: true, // <-- CAMBIO 1
                 estado: pendienteRevisar,
                 alcance: alcanceLocal,
                 origen: origenTectonico,
                 clasificacion: clasifSuperficial
             );
+            // --- FIN DE CORRECCIÓN ---
 
-            // Agregar cambio de estado al evento1
-            var cambioEstado1 = new CambioEstado(pendienteRevisar, DateTime.Now.AddHours(-5), null);
+            // --- INICIO DE CORRECCIÓN ---
+            // Agregamos el 'empleadoAnalista' al constructor de CambioEstado
+            var cambioEstado1 = new CambioEstado(pendienteRevisar, DateTime.Now.AddHours(-5), null, empleadoAnalista); // <-- CAMBIO 2
+            // --- FIN DE CORRECCIÓN ---
             evento1.CambiosEstado.Add(cambioEstado1);
 
             // Crear serie temporal para evento1
             var serie1 = new SerieTemporal(
                 condicionAlarma: false,
-                fechaHoraInicioRegistroMuestras: DateTime.Now.AddHours(-6),  // Nombre exacto del parámetro
+                fechaHoraInicioRegistroMuestras: DateTime.Now.AddHours(-6),
                 fechaHoraRegistro: DateTime.Now.AddHours(-5),
                 frecuenciaMuestreo: 0.1,
                 sismografo: sismografo1
@@ -113,14 +119,20 @@ namespace EventoSismicoApp
             evento1.SeriesTemporales.Add(serie1);
 
             // Evento 2
+            // --- INICIO DE CORRECCIÓN ---
             var evento2 = new EventoSismico(
                 DateTime.Now.AddHours(-3),
                 -24.7859, -65.4116, -24.8859, -65.5116,
-                4.2, pendienteRevisar, alcanceLocal, origenTectonico, clasifSuperficial
+                4.2,
+                true, // <-- CAMBIO 3
+                pendienteRevisar,
+                alcanceLocal, origenTectonico, clasifSuperficial
             );
+            // --- FIN DE CORRECCIÓN ---
 
-            evento2.CambiosEstado.Add(new CambioEstado(pendienteRevisar, DateTime.Now.AddHours(-2.5), null));
-
+            // --- INICIO DE CORRECCIÓN ---
+            evento2.CambiosEstado.Add(new CambioEstado(pendienteRevisar, DateTime.Now.AddHours(-2.5), null, empleadoAnalista)); // <-- CAMBIO 4
+            // --- FIN DE CORRECCIÓN ---
 
             // Crear nueva serie para evento2
             var serie2 = new SerieTemporal(
@@ -145,37 +157,45 @@ namespace EventoSismicoApp
             evento2.SeriesTemporales.Add(serie2);
 
 
-
+            // Evento 3 (ej. uno que no es autodetectado y ya está rechazado)
+            // --- INICIO DE CORRECCIÓN ---
             var evento3 = new EventoSismico(
                 DateTime.Now.AddHours(-10),
                 -32.8895, -68.8458,
                 -32.9895, -68.9458,
                 5.1,
+                false, // <-- CAMBIO 5
                 rechazado,
                 alcanceLocal,
                 origenTectonico,
                 clasifSuperficial
             );
+            // --- FIN DE CORRECCIÓN ---
 
-            evento3.CambiosEstado.Add(new CambioEstado(rechazado, DateTime.Now.AddHours(-9), DateTime.Now.AddHours(-8)));
-
+            // --- INICIO DE CORRECCIÓN ---
+            evento3.CambiosEstado.Add(new CambioEstado(rechazado, DateTime.Now.AddHours(-9), DateTime.Now.AddHours(-8), empleadoAnalista)); // <-- CAMBIO 6
+            // --- FIN DE CORRECCIÓN ---
             Program.EventosSismicos.Add(evento3);
 
 
+            // Evento 4 (ej. uno no autodetectado que quedó bloqueado)
+            // --- INICIO DE CORRECCIÓN ---
             var evento4 = new EventoSismico(
                 DateTime.Now.AddHours(-8),
                 -31.4201, -64.1888,
                 -31.5201, -64.2888,
                 2.9,
+                false, // <-- CAMBIO 7
                 bloqueadoEnRevision,
                 alcanceLocal,
                 origenTectonico,
                 clasifSuperficial
             );
+            // --- FIN DE CORRECCIÓN ---
 
-            evento4.CambiosEstado.Add(new CambioEstado(bloqueadoEnRevision, DateTime.Now.AddHours(-7), null));
-
-            
+            // --- INICIO DE CORRECCIÓN ---
+            evento4.CambiosEstado.Add(new CambioEstado(bloqueadoEnRevision, DateTime.Now.AddHours(-7), null, empleadoAnalista)); // <-- CAMBIO 8
+            // --- FIN DE CORRECCIÓN ---
 
 
             Program.EventosSismicos.AddRange(new[] { evento1, evento2, evento3, evento4 });

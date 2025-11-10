@@ -16,7 +16,15 @@ namespace EventoSismicoApp.Entities
             Telefono = telefono;
         }
 
-        // Método del diagrama
-        public bool EsTuUsuario(Usuario usuario) => this.Usuario.Nombre == usuario.Nombre;
+        // Método del diagrama. Viejo
+        //public bool EsTuUsuario(Usuario usuario) => this.Usuario.Nombre == usuario.Nombre;
+        public bool EsTuUsuario(Usuario usuario)
+        {
+            // --- INICIO DE CAMBIO ---
+            // Antes: return this.Usuario.Nombre == usuario.Nombre;
+            // Ahora:
+            return this.Usuario == usuario;
+            // --- FIN DE CAMBIO ---
+        }
     }
 }

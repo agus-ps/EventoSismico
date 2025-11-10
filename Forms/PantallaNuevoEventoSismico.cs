@@ -119,6 +119,7 @@ namespace EventoSismicoApp.Forms
             {
                 grillaSeries.Rows.Add(fila[0], fila[1], fila[2], fila[3], fila[4]);
             }
+            btnCancelar.Enabled = true;
         }
 
         public void habilitarOpcionMapaSismico()
@@ -158,6 +159,14 @@ namespace EventoSismicoApp.Forms
         private void tomarOpcionModificarDatos(object sender, EventArgs e)
         {
             Program.Manejador.TomarOpcionModificarDatos();
+        }
+
+        private void tomarOpcionCancelar(object sender, EventArgs e)
+        {
+            // 3. Respetamos el patrón: la Pantalla notifica al Manejador
+            Program.Manejador.tomarOpcionCancelar();
+            btnCancelar.Enabled = false;
+            MessageBox.Show("Revisión cancelada. El evento ha sido liberado.");
         }
 
         public void habilitarGrillaDatos()

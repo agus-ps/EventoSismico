@@ -21,10 +21,11 @@ namespace EventoSismicoApp.Entities
         public OrigenDeGeneracion Origen { get; set; }
         public ClasificacionSismo Clasificacion { get; set; }
         public List<SerieTemporal> SeriesTemporales { get; set; }
+        public bool EsAutoDetectado { get; set; }
 
         // Constructor completo
         public EventoSismico(DateTime fechaHoraOcurrencia, double latEpicentro, double longEpicentro,
-                           double latHipocentro, double longHipocentro, double magnitud,
+                           double latHipocentro, double longHipocentro, double magnitud, bool esAutoDetectado,
                            Estado estado, AlcanceSismo alcance, OrigenDeGeneracion origen,
                            ClasificacionSismo clasificacion)
         {
@@ -34,6 +35,7 @@ namespace EventoSismicoApp.Entities
             LatitudHipocentro = latHipocentro;
             LongitudHipocentro = longHipocentro;
             ValorMagnitud = magnitud;
+            EsAutoDetectado = esAutoDetectado;
             EstadoActual = estado;
             Alcance = alcance;
             Origen = origen;
@@ -42,8 +44,10 @@ namespace EventoSismicoApp.Entities
             SeriesTemporales = new List<SerieTemporal>();
         }
 
-        // Métodos actualizados:
 
+
+        // Métodos actualizados:
+        public bool esAutoDetectado() => this.EsAutoDetectado;
         public bool esPendienteRevisar() => EstadoActual != null && EstadoActual.esPendienteRevisar();
 
         public DateTime getHoraOcurrencia() => FechaHoraOcurrencia;
@@ -68,13 +72,94 @@ namespace EventoSismicoApp.Entities
             return null;
         }
 
-
-        public void crearCambioEstado(Estado nuevoEstado, DateTime fechaHoraInicio)
+        // Obsoleto, cambia por el de abajo
+        public void CrearCambioEstado(Estado nuevoEstado, DateTime fechaHoraInicio)
         {
             var cambio = new CambioEstado(nuevoEstado, fechaHoraInicio, null);
             CambiosEstado.Add(cambio);
             EstadoActual = nuevoEstado; // Actualizar estado actual
         }
+
+        // --- INICIO DE CAMBIO (Facu4) ---
+        // 1. Creamos el método para revertir el estado
+        public void liberarBloqueo(DateTime fechaHoraActual, Estado estadoPendiente, Empleado empleadoResponsable)
+        {
+            // 2. Buscamos el estado actual (que debería ser "BloqueadoEnRevision")
+            CambioEstado actualCambioEstado = this.buscarCambioEstadoAbierto();
+
+            if (actualCambioEstado != null && actualCambioEstado.Estado.esBloqueado())
+            {
+                // 3. Cerramos el estado "BloqueadoEnRevision"
+                actualCambioEstado.SetFechaHoraFin(fechaHoraActual);
+
+                // 4. Creamos un nuevo estado "PendienteRevisar"
+                this.CrearCambioEstado(estadoPendiente, fechaHoraActual, empleadoResponsable);
+            }
+        }
+        // --- FIN DE CAMBIO ---
+        public void CrearCambioEstado(Estado nuevoEstado, DateTime fechaHoraInicio, Empleado empleado)
+        {
+            // 2. Llamamos al NUEVO constructor de CambioEstado (el del Archivo 1)
+            var cambio = new CambioEstado(nuevoEstado, fechaHoraInicio, null, empleado);
+            CambiosEstado.Add(cambio);
+            EstadoActual = nuevoEstado; // Actualizar estado actual
+        }
+
+
+
+        
+        // Obsoleto, cambia por el de abajo
+        public void revisar(DateTime fechaHoraActual, Estado estadoBloqueadoEnRevision)
+        {
+            CambioEstado actualCambioEstado = this.buscarCambioEstadoAbierto();// Le pregunta a todos los cambios de estado si es actual
+
+            if (actualCambioEstado != null)
+            {
+                actualCambioEstado.SetFechaHoraFin(fechaHoraActual);
+
+                this.CrearCambioEstado(estadoBloqueadoEnRevision, fechaHoraActual);// TODO: para crear un cambio de estado
+            }
+        }
+        public void revisar(DateTime fechaHoraActual, Estado estadoBloqueadoEnRevision, Empleado empleadoResponsable)
+        {
+            CambioEstado actualCambioEstado = this.buscarCambioEstadoAbierto();
+
+            if (actualCambioEstado != null)
+            {
+                actualCambioEstado.SetFechaHoraFin(fechaHoraActual);
+
+                // 4. Llamamos a la NUEVA versión de CrearCambioEstado
+                this.CrearCambioEstado(estadoBloqueadoEnRevision, fechaHoraActual, empleadoResponsable);
+            }
+        }
+
+
+
+        // Obsoleto, cambia por el de abajo
+        public void rechazar(Estado estadoRechazado, DateTime fechaHora)
+        {
+            var cambioAbierto = this.buscarCambioEstadoAbierto();
+            if (cambioAbierto != null)
+            {
+                cambioAbierto.SetFechaHoraFin(fechaHora);
+                this.CrearCambioEstado(estadoRechazado, fechaHora);
+            }
+        }
+
+        public void rechazar(Estado estadoRechazado, DateTime fechaHora, Empleado empleadoResponsable)
+        {
+            var cambioAbierto = this.buscarCambioEstadoAbierto();
+            if (cambioAbierto != null)
+            {
+                cambioAbierto.SetFechaHoraFin(fechaHora);
+
+                // 6. Llamamos a la NUEVA versión de CrearCambioEstado
+                this.CrearCambioEstado(estadoRechazado, fechaHora, empleadoResponsable);
+            }
+        }
+
+
+
 
         public (string, string, string, List<string[]>) getDetalleEventoSismico()
         {
@@ -96,28 +181,6 @@ namespace EventoSismicoApp.Entities
             }
 
             return datos;
-        }
-
-        public void revisar(DateTime fechaHoraActual, Estado estadoBloqueadoEnRevision)
-        {
-            CambioEstado actualCambioEstado = this.buscarCambioEstadoAbierto();// Le pregunta a todos los cambios de estado si es actual
-
-            if (actualCambioEstado != null)
-            {
-                actualCambioEstado.SetFechaHoraFin(fechaHoraActual);
-
-                this.crearCambioEstado(estadoBloqueadoEnRevision, fechaHoraActual);// TODO: para crear un cambio de estado
-            }
-        }
-
-        public void rechazar(Estado estadoRechazado, DateTime fechaHora)
-        {
-            var cambioAbierto = this.buscarCambioEstadoAbierto();
-            if (cambioAbierto != null)
-            {
-                cambioAbierto.SetFechaHoraFin(fechaHora);
-                this.crearCambioEstado(estadoRechazado, fechaHora);
-            }
         }
     }
 }

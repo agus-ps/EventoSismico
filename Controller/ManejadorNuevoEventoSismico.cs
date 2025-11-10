@@ -18,7 +18,8 @@ namespace EventoSismicoApp.Controller
         private (string, string, string, List<string[]>) detalleEventoSismico;
         private Estado estadoBloqueadoEnRevision;
         private Usuario usuarioLogueado;
-
+        private Empleado empleadoLogueado;
+        private Estado estadoPendienteRevisar;
         public void registrarResultadoRevisionManual()
         {
             //eventosAutodetectados = Program.EventosSismicos;
@@ -33,7 +34,7 @@ namespace EventoSismicoApp.Controller
             //Primer loop
             foreach (var evento in Program.EventosSismicos)// Mientras haya eventos
             {
-                if (evento.esPendienteRevisar())
+                if (evento.esPendienteRevisar() && evento.esAutoDetectado())
                 {
                     var hora = evento.getHoraOcurrencia();
                     var ubicacion = evento.getUbicacion(); // Internamente llama a getCoordEpicentro/Hipocentro
@@ -65,14 +66,49 @@ namespace EventoSismicoApp.Controller
                 string hora = this.getHora();
                 DateTime fechaHoraActual = DateTime.ParseExact($"{fecha} {hora}", "dd/MM/yyyy HH:mm", null);
 
-                eventoSismicoSeleccionado.revisar(fechaHoraActual, this.estadoBloqueadoEnRevision); // Pasamos la fecha actual. TODO: Usar los metodos getFecha y getHora
-
+                //eventoSismicoSeleccionado.revisar(fechaHoraActual, this.estadoBloqueadoEnRevision); // Pasamos la fecha actual. TODO: Usar los metodos getFecha y getHora
+                eventoSismicoSeleccionado.revisar(fechaHoraActual, this.estadoBloqueadoEnRevision, this.empleadoLogueado);
 
                 this.buscarDetalleEventoSismico();
             }
         }
 
-        
+        // --- INICIO DE CAMBIO (Facu4) ---
+        // 1. Creamos el nuevo método público
+        public void tomarOpcionCancelar()
+        {
+            if (this.eventoSismicoSeleccionado != null && this.empleadoLogueado != null)
+            {
+                // 2. Buscamos el estado al que debemos revertir
+                this.buscarPendienteRevisar();
+
+                // 3. Le decimos al evento que libere el bloqueo
+                this.eventoSismicoSeleccionado.liberarBloqueo(
+                    DateTime.Now,
+                    this.estadoPendienteRevisar,
+                    this.empleadoLogueado
+                );
+
+                // 4. Limpiamos la selección
+                this.eventoSismicoSeleccionado = null;
+            }
+        }
+
+        // 5. Creamos un método helper para buscar el estado "PendienteRevisar"
+        private void buscarPendienteRevisar()
+        {
+            foreach (var estado in Program.Estados)
+            {
+                if (estado.esAmbitoEventoSismografico() && estado.esPendienteRevisar())
+                {
+                    this.estadoPendienteRevisar = estado;
+                    break;
+                }
+            }
+        }
+        // --- FIN DE CAMBIO ---
+
+
         private void buscarEstadoBloqueadoEnRevision()
         {
             foreach (var estado in Program.Estados)
@@ -85,14 +121,13 @@ namespace EventoSismicoApp.Controller
             }
         }
 
-        
+        /*
         private void buscarUsuarioLogueado()
         {
             if (Program.SesionActual != null)
             {
                 var empleadoDeSesion = Program.SesionActual.GetEmpleadoEnSesion();
 
-                
                 foreach (var empleado in Program.Empleados)
                 {
                     if (empleado.EsTuUsuario(Program.SesionActual.Usuario))
@@ -101,6 +136,20 @@ namespace EventoSismicoApp.Controller
                         break;
                     }
                 }
+            }
+        }
+        */
+
+        private void buscarUsuarioLogueado()
+        {
+            if (Program.SesionActual != null)
+            {
+                // --- INICIO DE CAMBIO ---
+                // 3. Ya no recorremos Program.Empleados (eso estaba mal como dijo Facu)
+                //    Obtenemos el Empleado DIRECTAMENTE del Usuario de la Sesión.
+                this.usuarioLogueado = Program.SesionActual.Usuario;
+                this.empleadoLogueado = this.usuarioLogueado.Empleado; // Asumiendo que Usuario tiene .Empleado
+                // --- FIN DE CAMBIO ---
             }
         }
 
@@ -179,7 +228,8 @@ namespace EventoSismicoApp.Controller
 
                     if (estadoRechazado != null && this.eventoSismicoSeleccionado != null)
                     {
-                        this.eventoSismicoSeleccionado.rechazar(estadoRechazado, DateTime.Now);
+                        //this.eventoSismicoSeleccionado.rechazar(estadoRechazado, DateTime.Now);
+                        this.eventoSismicoSeleccionado.rechazar(estadoRechazado, DateTime.Now, this.empleadoLogueado);
                     }
 
                     this.FinCU();
