@@ -28,7 +28,7 @@ namespace EventoSismicoApp.Entities
         }
 
 
-        // Método del diagrama
+        // Método viejo, cuando esta clase era la que consultaba el nombre de la estacion
         public List<string[]> GetSerie()
         {
             var lista = new List<string[]>();
@@ -43,6 +43,21 @@ namespace EventoSismicoApp.Entities
             return lista;
         }
 
+        public List<string[]> GetSerie(string estacion)
+        {
+            var lista = new List<string[]>();
+
+            // 3. Ya no llamamos a Sismografo.GetEstacion()...
+            //    Usamos directamente el parámetro 'estacion'
+
+            foreach (var muestra in this.Muestras)
+            {
+                var datosMuestra = muestra.GetDatos(estacion);
+                lista.AddRange(datosMuestra);
+            }
+
+            return lista;
+        }
 
     }
 }

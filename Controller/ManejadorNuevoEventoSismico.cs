@@ -121,7 +121,7 @@ namespace EventoSismicoApp.Controller
             }
         }
 
-        /*
+        
         private void buscarUsuarioLogueado()
         {
             if (Program.SesionActual != null)
@@ -138,8 +138,8 @@ namespace EventoSismicoApp.Controller
                 }
             }
         }
-        */
-
+        
+        /*
         private void buscarUsuarioLogueado()
         {
             if (Program.SesionActual != null)
@@ -152,6 +152,7 @@ namespace EventoSismicoApp.Controller
                 // --- FIN DE CAMBIO ---
             }
         }
+        */
 
         private void buscarDetalleEventoSismico()
         {

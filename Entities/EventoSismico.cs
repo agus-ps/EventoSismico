@@ -177,7 +177,9 @@ namespace EventoSismicoApp.Entities
 
             foreach (var serie in this.SeriesTemporales)
             {
-                datos.AddRange(serie.GetSerie());
+                string nombreEstacion = serie.Sismografo.GetEstacion().GetNombre();
+                datos.AddRange(serie.GetSerie(nombreEstacion));
+                // datos.AddRange(serie.GetSerie()); De esta forma estaba antes, cuando getEstacion lo hacia la serie temporal y no EventoSismico
             }
 
             return datos;
