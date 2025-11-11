@@ -1,0 +1,219 @@
+@startuml
+' <<boundary>> clase de interfaz de usuario
+class PantallaNuevoEventoSismico <<boundary>> {
+    +habilitar()
+    +presentarEventos()
+    +habilitarOpcionMapaSismico()
+    +habilitarOpcionEstacionesInvolucradas()
+    +habilitarOpcionModificarDatos()
+    +habilitarGrillaDatos()
+    +ponerRegistrarResultadoRevisionManual()
+    +seleccionaEventoSismico()
+    +solicitarOpcionMapaSismico()
+    +tomarOpcionMapaSismico()
+    +solicitarOpcionModificarDatos()
+    +tomarOpcionModificarDatos()
+    +solicitarOpcionGrilla()
+    +tomarOpcionGrilla()
+    +btnRegResRevManual
+    +grillaEventos
+    +btnHabilitarMapaSismico
+    +btnHabilitarEstacionesInvolucradas
+    +btnModificarEventoSismico
+    +grillaOpciones
+    +btnModificarDatosEventoSismico
+}
+
+' <<control>> clase de control
+class ManejadorNuevoEventoSismico <<control>> {
+    +eventoAutodetectado
+    +eventoSismicoSeleccionado
+    +estadoBloqueadoEnRevision
+    +usuarioLogueado
+    +detalleEventoSismico
+    +opcionRechazadoSeleccionado
+    +eventoSismicoRechazado
+    +registrarResultadoRevisionManual()
+    +ordenarRechazado()
+    +buscarAutor()
+    +buscarEstadoBloqueadoEnRevision()
+    +buscarUsuarioLogueado()
+    +buscarDetalleEventoSismico()
+    +validarExistencia()
+    +buscarRechazado()
+    +tomarSeleccionEventoSismico()
+    +getFecha()
+    +getHora()
+    +buscarEstacionSismologica()
+    +tomarOpcionMapaSismico()
+    +tomarOpcionModificarDatos()
+    +tomarOpcionGrilla()
+    +finCU()
+}
+
+' <<entity>> clase de entidad
+class EventoSismico <<entity>> {
+    +fechaHoraFin
+    +fechaHoraOcurrencia
+    +latitudEpicentro
+    +latitudHipocentro
+    +longitudEpicentro
+    +longitudHipocentro
+    +valorMagnitud
+    +new()
+    +adquirirDatos()
+    +controlarTiempo()
+    +confirmarRevision()
+    +anular()
+    +revisar()
+    +registrarAutomatico()
+    +derivar()
+    +rechazar()
+    +confirmar()
+    +registrarPendienteCierre()
+    +cerrar()
+    +esPendienteRevisar()
+    +getHoraOcurrencia()
+    +getUbicacion()
+    +getCoordEpicentro()
+    +getCoordHipocentro()
+    +getMagnitud()
+    +esValido()
+    +buscarCambioEstadoAbierto()
+    +crearCambioEstado()
+    +getDetalleEventoSismico()
+    +obtenerDatosSeriesTemporales()
+    +rechazar()
+}
+
+class Estado <<entity>> {
+    +ambito
+    +nombreEstado
+    +esAmbitoEventoSismografico()
+    +esBloqueado()
+    +esRechazado()
+    +esPendienteRevisar()
+}
+
+class CambioEstado <<entity>> {
+    +fechaHoraFin
+    +fechaHoraInicio
+    +setFechaHoraFin()
+    +esActual()
+    +crear()
+}
+
+class AlcanceSismo <<entity>> {
+    +descripcion
+    +nombre
+    +getNombre()
+}
+
+class OrigenDeGeneracion <<entity>> {
+    +descripcion
+    +nombre
+    +getNombre()
+}
+
+class ClasificacionSismo <<entity>> {
+    +kmProfundidadDesde
+    +kmProfundidadHasta
+    +nombre
+    +getNombre()
+}
+
+class SerieTemporal <<entity>> {
+    +condicionAlarma
+    +fechaHoraInicioRegistroMuestras
+    +fechaHoraRegistro
+    +frecuenciaMuestreo
+    +getSerie()
+    +getEstacion()
+}
+
+class Empleado <<entity>> {
+    +apellido
+    +mail
+    +nombre
+    +telefono
+    +esTuUsuario()
+}
+
+class Sesion <<entity>> {
+    +fechaHoraInicio
+    +fechaHoraFin
+    +getEmpleadoEnSesion()
+}
+
+class Usuario <<entity>> {
+    +nombre
+    +contraseña
+    getEmpleado()
+}
+
+class MuestraSismica <<entity>> {
+    +fechaHoraMuestra
+    +getDatos()
+}
+
+class Sismografo <<entity>> {
+    +fechaAdquisicion
+    +identificadorSismografo
+    +numeroSerie
+    +getEstacion()
+}
+
+class DetalleMuestraSismica <<entity>> {
+    +getDatos()
+    +valor
+}
+
+class EstacionSismologica <<entity>> {
+    +codigoEstacion
+    +documentoCertifiacionAdq
+    +fechaSolicitudCertificacion
+    +latitud
+    +longitud
+    +nombre
+    +numeroCertificacionAdquisicion
+    +getNombre()
+}
+
+class TipoDato <<entity>> {
+    +denominacion
+    +valorUmbral
+    +nombreUnidadMedida
+    +getDatos()
+}
+
+' Relaciones
+PantallaNuevoEventoSismico ..> ManejadorNuevoEventoSismico
+
+ManejadorNuevoEventoSismico ..> PantallaNuevoEventoSismico
+ManejadorNuevoEventoSismico ..> EventoSismico
+ManejadorNuevoEventoSismico ..> Estado
+ManejadorNuevoEventoSismico ..> Sesion
+ManejadorNuevoEventoSismico ..> Empleado
+
+EventoSismico "1"-->"Estado" Estado
+EventoSismico "1..*"--> "CambioEstado" CambioEstado
+EventoSismico "1"--> "AlcanceSismo" AlcanceSismo
+EventoSismico "1"--> "OrigenDeGeneracion" OrigenDeGeneracion
+EventoSismico "1"--> "ClaisifacionSismo" ClasificacionSismo
+EventoSismico "1"--> "SerieTemporal" SerieTemporal
+
+Sesion "1" --> "Usuario" Usuario
+Empleado "1" --> "Usuario" Usuario
+
+SerieTemporal "1..*" o--> "MuestraSismica" MuestraSismica
+SerieTemporal "1"--> "Sismografo" Sismografo
+
+MuestraSismica "1..*" o--> "DetalleMuestraSismica" DetalleMuestraSismica
+
+DetalleMuestraSismica "1"--> "TipoDato" TipoDato
+
+Sismografo "1"--> "EstacionSismologica" EstacionSismologica
+
+CambioEstado "1"--> "Estado" Estado
+
+@enduml
