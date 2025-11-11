@@ -1,0 +1,94 @@
+## --- Visual Studio ---
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## --- Build results ---
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Tt]est[Rr]esult*/
+[Dd]ebug*/
+[Rr]elease*/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# ----------------------------
+# Archivos de Base de Datos (SQLite)
+# Ignorar la base de datos local
+*.db
+
+## --- Visual Studio cache / files ---
+*.tlog
+*.dbmdl
+*.cachefile
+*.pdb
+*.ilk
+*.idb
+*.ipch
+*.aps
+*.ncb
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.VC.opendb
+
+## --- NuGet ---
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+packages/
+.nuget/
+*.lock.json
+
+## --- Publish output ---
+publish/
+dist/
+*.publish.xml
+*.pubxml
+*.pubxml.user
+app.publish/
+
+## --- Configuration files ---
+*.config.user
+*.local.config
+*.launchSettings.json
+
+## --- Windows specific ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## --- Logs ---
+*.log
+
+## --- Others ---
+*.tmp
+*.bak
+*.swp
+*.orig
+*.old
+*.vspscc
+*.vssscc
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+
+# User secrets (si usás .NET Core / ASP.NET)
+secrets.json
+
+# Sensitive files (API keys, etc)
+*.key
+*.pfx
+*.cer
+
+# Optional: ignores para GitHub Copilot / AI
+copilot.*

@@ -1,0 +1,58 @@
+@startuml
+skinparam sequenceMessageAlign center
+
+actor AnalistaEnSismos as as
+control ":ManejadorNuevoEventoSismico" as controller
+entity "seleccionado:EventoSismico" as seleccionadoES
+entity ":AlcanceSismo" as alcance
+entity ":OrigenDeGeneracion" as origen
+entity ":ClasificacionSismo" as clasificacion
+participant IteradorDatosSeriesTemporales
+entity ":SerieTemporal" as serieTemporal
+participant IteradorMuestraSismica
+entity ":MuestraSismica" as muestra
+entity ":DetalleMuestraSismica" as detalleMuestraSismica
+entity ":TipoDato" as tipoDato
+entity ":Sismografo" as sismografo
+entity ":EstacionSismologica" as estacionSismologica
+
+
+controller -> controller : buscarDetalleEventoSismico()
+controller -> seleccionadoES : getDetalleEventoSismico()
+
+seleccionadoES -> alcance : getNombre()
+seleccionadoES -> origen : getNombre()
+seleccionadoES -> clasificacion : getNombre()
+
+seleccionadoES -> seleccionadoES : obtenerDatosSeriesTemporales()
+
+seleccionadoES -> seleccionadoES : crearIterador(elementos: Object[]): Iterador
+seleccionadoES -> IteradorDatosSeriesTemporales : new(elementos: Ojbect[]): IteradorDatosSeriesTemporales
+seleccionadoES -> IteradorDatosSeriesTemporales : primero()
+
+
+
+loop mientras haya series temporales
+    seleccionadoES -> IteradorDatosSeriesTemporales : haFinalizado(): Boolean
+    seleccionadoES -> IteradorDatosSeriesTemporales : elementoActual(): Object
+    seleccionadoES -> serieTemporal : getSerie()
+    serieTemporal -> serieTemporal : crearIterador(elementos: Object[]): Iterador
+    serieTemporal -> IteradorMuestraSismica : new(elementos: Object[]]): IteradorTipoDato
+    serieTemporal -> IteradorMuestraSismica : primero()
+    loop mientras haya muestras
+        serieTemporal -> IteradorMuestraSismica : haFinalizado(): Boolean
+        serieTemporal -> IteradorMuestraSismica : elementoActual(): Boolean
+        serieTemporal -> muestra : getDatos(): TipoDato
+        muestra -> detalleMuestraSismica : getDatos(): TipoDato
+        detalleMuestraSismica -> tipoDato : getDatos(): TipoDato
+        serieTemporal -> IteradorMuestraSismica : siguiente()
+    end
+    seleccionadoES -> sismografo:getEstacion()
+    sismografo -> estacionSismologica : getEstacion()
+    seleccionadoES -> IteradorDatosSeriesTemporales : siguiente()
+    
+end
+
+controller -> controller : ordenarPorEstacionSismologica(nombreEstacion: String): EventoSismico[]
+
+@enduml
