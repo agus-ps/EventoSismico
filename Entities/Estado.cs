@@ -2,9 +2,11 @@ namespace EventoSismicoApp.Entities
 {
     public class Estado
     {
+        public int Id { get; set; }
         public string Ambito { get; set; }
         public string NombreEstado { get; set; }
 
+        public Estado() { }
         public Estado(string ambito, string nombreEstado)
         {
             this.Ambito = ambito;

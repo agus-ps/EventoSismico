@@ -4,10 +4,13 @@ namespace EventoSismicoApp.Entities
 {
     public class CambioEstado
     {
+        public int Id { get; set; }// Necesario para que el ORM no tire error por falta de PK
         public DateTime? FechaHoraFin { get; set; }
         public DateTime FechaHoraInicio { get; set; }
         public Estado Estado { get; set; }
         public Empleado EmpleadoResponsable { get; set; }
+        
+        public CambioEstado() { }
 
         public CambioEstado(Estado estado, DateTime fechaHoraInicio, DateTime? fechaHoraFin, Empleado empleado)
         {

@@ -23,6 +23,9 @@ namespace EventoSismicoApp.Entities
         public ClasificacionSismo Clasificacion { get; set; }
         public List<SerieTemporal> SeriesTemporales { get; set; }
         public bool EsAutoDetectado { get; set; }
+        public int Id { get; set; }// Necesario para que el orm no tire error por falta de pk
+
+        public EventoSismico() { }
 
         // Constructor completo
         public EventoSismico(DateTime fechaHoraOcurrencia, double latEpicentro, double longEpicentro,

@@ -3,9 +3,13 @@ namespace EventoSismicoApp.Entities
 {
     public class Usuario
     {
+        public int Id { get; set; }
         public string Nombre { get; set; }
         public string Contraseña { get; set; }
         public Empleado Empleado { get; set; }
+        public int EmpleadoId { get; set; }
+
+        public Usuario() { }
 
         public Usuario(string nombre, string contraseña, Empleado empleado)
         {

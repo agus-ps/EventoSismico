@@ -4,6 +4,9 @@ namespace EventoSismicoApp.Entities
     {
         public double Valor { get; set; }
         public TipoDato TipoDato { get; set; }
+        public int Id { get; set; }
+
+        public DetalleMuestraSismica() { }
 
 
         public DetalleMuestraSismica(double valor, TipoDato tipoDato)

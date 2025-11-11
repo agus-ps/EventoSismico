@@ -5,6 +5,7 @@ namespace EventoSismicoApp.Entities
 {
     public class SerieTemporal : IAgregado
     {
+        public int Id { get; set; }
         public bool CondicionAlarma { get; set; }
         public DateTime FechaHoraInicioRegistroMuestras { get; set; }
         public DateTime FechaHoraRegistro { get; set; }
@@ -12,6 +13,7 @@ namespace EventoSismicoApp.Entities
         public List<MuestraSismica> Muestras { get; set; }
         public Sismografo Sismografo { get; set; }
 
+        public SerieTemporal() { }
 
         public SerieTemporal(
             bool condicionAlarma,

@@ -5,6 +5,9 @@ namespace EventoSismicoApp.Entities
         public double KmProfundidadDesde { get; set; }
         public double KmProfundidadHasta { get; set; }
         public string Nombre { get; set; }
+        public int Id { get; set; }
+
+        public ClasificacionSismo() { }
 
         public ClasificacionSismo(string nombre, double desde, double hasta)
         {

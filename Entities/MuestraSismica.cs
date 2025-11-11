@@ -4,6 +4,7 @@ namespace EventoSismicoApp.Entities
 {
     public class MuestraSismica
     {
+        public int Id { get; set; }
         public DateTime FechaHoraMuestra { get; set; }
         public List<DetalleMuestraSismica> Detalles { get; set; }
 
@@ -12,6 +13,7 @@ namespace EventoSismicoApp.Entities
             FechaHoraMuestra = fechaHoraMuestra;
             Detalles = new List<DetalleMuestraSismica>();
         }
+        public MuestraSismica() { }
 
         // Método del diagrama
         //public List<DetalleMuestraSismica> GetDatos() => Detalles;
