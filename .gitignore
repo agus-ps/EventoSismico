@@ -18,6 +18,11 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 
+# ----------------------------
+# Archivos de Base de Datos (SQLite)
+# Ignorar la base de datos local
+*.db
+
 ## --- Visual Studio cache / files ---
 *.tlog
 *.dbmdl

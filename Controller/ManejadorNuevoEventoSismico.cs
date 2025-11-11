@@ -1,10 +1,10 @@
-﻿using System;
+﻿using EventoSismicoApp;
+using EventoSismicoApp.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
-using EventoSismicoApp;
-using EventoSismicoApp.Entities;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EventoSismicoApp.Controller
@@ -30,14 +30,29 @@ namespace EventoSismicoApp.Controller
 
         private void buscarAutodetectados()
         {
-            eventosAutodetectados = new List<EventoSismico>();// TODO: no deebría guardar la lista de eventos sismicos.
-            //Primer loop
-            foreach (var evento in Program.EventosSismicos)// Mientras haya eventos
+            eventosAutodetectados = new List<EventoSismico>();
+
+            // --- INICIO DE CAMBIOS ---
+            // Reemplazamos el foreach sobre la lista estática
+
+            // Antes:
+            // foreach (var evento in Program.EventosSismicos)
+
+            // Ahora: (Consultamos la DB)
+            // 1. Cargamos todos los eventos que cumplan la condición
+            //    Usamos .Include() para cargar el Estado, si no, evento.esPendienteRevisar() fallaría
+            var eventosDesdeDb = Program.Db.EventosSismicos
+                                        .Include(e => e.EstadoActual)
+                                        .ToList(); // Traemos a memoria
+
+            // 2. Filtramos en memoria (ya que tus métodos es...() no son SQL)
+            foreach (var evento in eventosDesdeDb)
             {
                 if (evento.esPendienteRevisar() && evento.esAutoDetectado())
+                // --- FIN DE CAMBIOS ---
                 {
                     var hora = evento.getHoraOcurrencia();
-                    var ubicacion = evento.getUbicacion(); // Internamente llama a getCoordEpicentro/Hipocentro
+                    var ubicacion = evento.getUbicacion();
                     var magnitud = evento.getMagnitud();
 
                     eventosAutodetectados.Add(evento);
@@ -79,17 +94,18 @@ namespace EventoSismicoApp.Controller
         {
             if (this.eventoSismicoSeleccionado != null && this.empleadoLogueado != null)
             {
-                // 2. Buscamos el estado al que debemos revertir
                 this.buscarPendienteRevisar();
-
-                // 3. Le decimos al evento que libere el bloqueo
                 this.eventoSismicoSeleccionado.liberarBloqueo(
                     DateTime.Now,
                     this.estadoPendienteRevisar,
                     this.empleadoLogueado
                 );
 
-                // 4. Limpiamos la selección
+                // --- INICIO DE CAMBIOS ---
+                // 3. Guardamos los cambios en la DB
+                Program.Db.SaveChanges();
+                // --- FIN DE CAMBIOS ---
+
                 this.eventoSismicoSeleccionado = null;
             }
         }
@@ -97,48 +113,44 @@ namespace EventoSismicoApp.Controller
         // 5. Creamos un método helper para buscar el estado "PendienteRevisar"
         private void buscarPendienteRevisar()
         {
-            foreach (var estado in Program.Estados)
-            {
-                if (estado.esAmbitoEventoSismografico() && estado.esPendienteRevisar())
-                {
-                    this.estadoPendienteRevisar = estado;
-                    break;
-                }
-            }
+            // --- INICIO DE CAMBIOS ---
+            // Antes:
+            // foreach (var estado in Program.Estados) { ... }
+
+            // Ahora: (Consulta LINQ)
+            this.estadoPendienteRevisar = Program.Db.Estados
+                .FirstOrDefault(e => e.Ambito == "EventoSismografico" && e.NombreEstado == "PendienteRevisar");
+            // --- FIN DE CAMBIOS ---
         }
         // --- FIN DE CAMBIO ---
 
 
         private void buscarEstadoBloqueadoEnRevision()
         {
-            foreach (var estado in Program.Estados)
-            {
-                if (estado.esAmbitoEventoSismografico() && estado.esBloqueado())
-                {
-                    this.estadoBloqueadoEnRevision = estado;
-                    break;
-                }
-            }
+            // --- INICIO DE CAMBIOS ---
+            // Antes:
+            // foreach (var estado in Program.Estados) { ... }
+
+            // Ahora: (Consulta LINQ)
+            this.estadoBloqueadoEnRevision = Program.Db.Estados
+                .FirstOrDefault(e => e.Ambito == "EventoSismografico" && e.NombreEstado == "BloqueadoEnRevision");
+            // --- FIN DE CAMBIOS ---
         }
 
-        
         private void buscarUsuarioLogueado()
         {
             if (Program.SesionActual != null)
             {
-                var empleadoDeSesion = Program.SesionActual.GetEmpleadoEnSesion();
-
-                foreach (var empleado in Program.Empleados)
-                {
-                    if (empleado.EsTuUsuario(Program.SesionActual.Usuario))
-                    {
-                        this.usuarioLogueado = Program.SesionActual.Usuario;
-                        break;
-                    }
-                }
+                // --- INICIO DE CAMBIOS ---
+                // El Program.SesionActual ya se cargó en Program.cs
+                // con su Usuario y Empleado (gracias al .Include().ThenInclude())
+                // Así que este método que corregimos... ¡ya funciona!
+                this.usuarioLogueado = Program.SesionActual.Usuario;
+                this.empleadoLogueado = this.usuarioLogueado.Empleado;
+                // --- FIN DE CAMBIOS ---
             }
         }
-        
+
         /*
         private void buscarUsuarioLogueado()
         {
@@ -231,6 +243,7 @@ namespace EventoSismicoApp.Controller
                     {
                         //this.eventoSismicoSeleccionado.rechazar(estadoRechazado, DateTime.Now);
                         this.eventoSismicoSeleccionado.rechazar(estadoRechazado, DateTime.Now, this.empleadoLogueado);
+                        Program.Db.SaveChanges();
                     }
 
                     this.FinCU();
@@ -243,7 +256,13 @@ namespace EventoSismicoApp.Controller
         }
 
         private Estado buscarRechazado()
-            => Program.Estados.FirstOrDefault(e => e.EsRechazado());
+        {
+            // --- INICIO DE CAMBIOS ---
+            // Antes: Program.Estados.FirstOrDefault(...)
+            // Ahora:
+            return Program.Db.Estados.FirstOrDefault(e => e.NombreEstado == "Rechazado");
+            // --- FIN DE CAMBIOS ---
+        }
 
         private void FinCU()
         {
