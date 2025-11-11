@@ -2,168 +2,57 @@
 skinparam sequenceMessageAlign center
 
 actor AnalistaEnSismos as as
-boundary ":PantallaNuevoEventoSismico" as pantalla
 control ":ManejadorNuevoEventoSismico" as controller
-entity ":EventoSismico" as eventoSismico
 entity "seleccionado:EventoSismico" as seleccionadoES
-entity ":Estado" as estado
-entity "Actual:Estado" as actualEstado
-entity "Actual:Sesion" as sesionActual
-entity "Logueado:Usuario" as usuario
-entity ":Empleado" as empleado
-entity ":CambioEstado" as cambioEstado
-entity "Actual:CambioEstado" as actualCambioEstado
 entity ":AlcanceSismo" as alcance
 entity ":OrigenDeGeneracion" as origen
 entity ":ClasificacionSismo" as clasificacion
+participant IteradorDatosSeriesTemporales
 entity ":SerieTemporal" as serieTemporal
+participant IteradorMuestraSismica
 entity ":MuestraSismica" as muestra
 entity ":DetalleMuestraSismica" as detalleMuestraSismica
 entity ":TipoDato" as tipoDato
 entity ":Sismografo" as sismografo
 entity ":EstacionSismologica" as estacionSismologica
 
-participant CU.GenerarSismograma as CU
 
-as -> pantalla : OpcionRegistrarResultadoRevisionManual()
-pantalla -> pantalla : habilitar()
+controller -> controller : buscarDetalleEventoSismico()
+controller -> seleccionadoES : getDetalleEventoSismico()
 
-' --- Corrección 4 (Cancelar) SE MANTIENE ---
-note right of as: Se mantiene el flujo alternativo (Facu4).
-alt [Operacion Normal]
-    pantalla -> controller : registrarResultadoRevisionManual()
+seleccionadoES -> alcance : getNombre()
+seleccionadoES -> origen : getNombre()
+seleccionadoES -> clasificacion : getNombre()
 
-    controller -> controller : buscarAutodetectados()
+seleccionadoES -> seleccionadoES : obtenerDatosSeriesTemporales()
 
-    loop Mientras haya eventos
-        ' --- Corrección 3 (AutoDetectado) SE MANTIENE ---
-        note right
-            **Corrección Facu5:**
-            Se mantiene el chequeo "esAutoDetectado()".
-        end note
-        controller -> eventoSismico: esAutoDetectado()
-        controller -> eventoSismico: esPendienteRevisar()
-        ' --- FIN CORRECCIÓN 3 ---
-        
-        eventoSismico -> actualEstado: esPendienteRevisar() 
-        
-        controller -> eventoSismico: getHoraOcurrencia()
-        controller -> eventoSismico: getUbicacion()
-        ' ... (etc)
-        controller -> eventoSismico: getMagnitud()
+seleccionadoES -> seleccionadoES : crearIterador(elementos: Object[]): Iterador
+seleccionadoES -> IteradorDatosSeriesTemporales : new(elementos: Ojbect[]): IteradorDatosSeriesTemporales
+seleccionadoES -> IteradorDatosSeriesTemporales : primero()
+
+
+
+loop mientras haya series temporales
+    seleccionadoES -> IteradorDatosSeriesTemporales : haFinalizado(): Boolean
+    seleccionadoES -> IteradorDatosSeriesTemporales : elementoActual(): Object
+    seleccionadoES -> serieTemporal : getSerie()
+    serieTemporal -> serieTemporal : crearIterador(elementos: Object[]): Iterador
+    serieTemporal -> IteradorMuestraSismica : new(elementos: Object[]]): IteradorTipoDato
+    serieTemporal -> IteradorMuestraSismica : primero()
+    loop mientras haya muestras
+        serieTemporal -> IteradorMuestraSismica : haFinalizado(): Boolean
+        serieTemporal -> IteradorMuestraSismica : elementoActual(): Boolean
+        serieTemporal -> muestra : getDatos(): TipoDato
+        muestra -> detalleMuestraSismica : getDatos(): TipoDato
+        detalleMuestraSismica -> tipoDato : getDatos(): TipoDato
+        serieTemporal -> IteradorMuestraSismica : siguiente()
     end
-    controller -> controller: ordenarFechaHora()
-    controller -> pantalla: presentarEventos()
-
-    as -> pantalla: seleccionaEventoSismico()
-    pantalla -> controller: tomarSeleccionEventoSismico()
-
-    controller -> controller: buscarEstadoBloqueadoEnRevision()
-    ' ... (loop de buscarEstado)
-
-    ' --- INICIO DE REVERSIÓN (Corrección 2) ---
-    note right of controller
-        **Reversión (Corrección 2):**
-        Se vuelve al flujo original (con búsqueda global)
-        tal como se solicitó.
-        **Antes (Corregido):**
-        controller -> sesionActual : usuario = getUsuario()
-        controller -> usuario : empleado = getEmpleado()
-        **Ahora (Original):**
-    end note
-    controller -> controller : buscarUsuarioLogueado()
-    controller -> sesionActual : getEmpleadoEnSesion()
-    sesionActual -> usuario : getEmpleado()
-    controller -> empleado : *esTuUsuario()
-    ' --- FIN DE REVERSIÓN (Corrección 2) ---
+    seleccionadoES -> sismografo:getEstacion()
+    sismografo -> estacionSismologica : getEstacion()
+    seleccionadoES -> IteradorDatosSeriesTemporales : siguiente()
     
-    controller -> controller : getFecha() 
-    controller -> controller : getHora()
-
-    ' --- Corrección 1 (Empleado) SE MANTIENE ---
-    note right
-        **Corrección Facu7/Profe2:**
-        Se mantiene el pasaje del 'empleado'
-        para asociarlo al CambioEstado.
-    end note
-    controller -> seleccionadoES : revisar(empleado, estadoBloqueado, fechaHora)
-    ' --- FIN CORRECCIÓN 1 ---
-
-    seleccionadoES -> seleccionadoES: buscarCambioEstadoAbierto()
-    ' ... (etc)
-    seleccionadoES -> actualCambioEstado : setFechaHoraFin()
-
-    seleccionadoES -> seleccionadoES : crearCambioEstado()
-    create entity "BloqueadoEnRevision:CambioEstado" as bloqueadoCambioEstado
-    
-    ' --- Corrección 1 (Empleado) SE MANTIENE ---
-    seleccionadoES -> bloqueadoCambioEstado : crear(estadoBloqueado, fechaHora, empleado)
-    ' --- FIN CORRECCIÓN 1 ---
-
-
-    note right: Arranca Paso 9
-    controller -> controller : buscarDetalleEventoSismico()
-    controller -> seleccionadoES : getDetalleEventoSismico()
-
-    seleccionadoES -> alcance : getNombre()
-    seleccionadoES -> origen : getNombre()
-    seleccionadoES -> clasificacion : getNombre()
-
-    seleccionadoES -> seleccionadoES : obtenerDatosSeriesTemporales()
-
-    ' --- INICIO MODIFICACIÓN (Punto 5) ---
-    note right
-        Loop original (Sin corrección 5),
-        con la modificación solicitada
-        para el mensaje 'getEstacion'.
-    end note
-    loop mientras haya series
-        seleccionadoES -> serieTemporal : getSerie()
-        loop mientras haya muestras
-            serieTemporal -> muestra : getDatos()
-            muestra -> detalleMuestraSismica : getDatos()
-            detalleMuestraSismica -> tipoDato : getDatos()
-        end
-        
-        note right
-            **Cambio solicitado:**
-            El mensaje 'getEstacion'
-            ahora es enviado por 'seleccionadoES'.
-        end note
-        seleccionadoES -> sismografo : getEstacion()
-        
-        ' (Se mantiene el error original Profe1)
-        sismografo -> estacionSismologica : getEstacion() 
-    end
-    ' --- FIN MODIFICACIÓN (Punto 5) ---
-
-    controller -> controller: ordenarPorEstacionSismologica()
-    controller -> CU : <<include>>
-
-    ' ... (Flujo de Opciones de Mapa y Modificar) ...
-    as -> pantalla : tomarOpcionModificarDatos(No)
-    pantalla -> controller : tomarOpcionModificarDatos(No)
-
-    ' ... (Flujo de tomarOpcionGrilla) ...
-    as -> pantalla : tomarOpcionGrilla(Rechazado)
-    pantalla -> controller : tomarOpcionGrilla(Rechazado)
-    ' ...
-    controller -> estado : *esRechazado()
-    
-    ' --- Corrección 1 (Empleado) SE MANTIENE ---
-    controller -> seleccionadoES : rechazar(empleado, estadoRechazado, fechaHora)
-    ' ...
-    create entity "nuevo:CambioEstado" as nuevoCambioEstado
-    seleccionadoES -> nuevoCambioEstado : crear(estadoRechazado, fechaHora, empleado)
-    ' --- FIN CORRECCIÓN 1 ---
-
-' --- Corrección 4 (Cancelar) SE MANTIENE ---
-else [Actor cancela operación]
-    note over as, controller: Flujo alternativo (Facu4).
-    as -> pantalla : cancelar()
-    pantalla -> controller : tomarOpcionCancelar()
-    controller -> seleccionadoES : liberarBloqueo(estadoPendiente, fechaHora, empleado)
 end
-' --- FIN CORRECCIÓN 4 ---
+
+controller -> controller : ordenarPorEstacionSismologica(nombreEstacion: String): EventoSismico[]
 
 @enduml
