@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using EventoSismicoApp.Iterador; // <-- 1. IMPORTAR ITERADOR
 
 namespace EventoSismicoApp.Entities
 {
-    public class SerieTemporal
+    public class SerieTemporal : IAgregado
     {
         public bool CondicionAlarma { get; set; }
         public DateTime FechaHoraInicioRegistroMuestras { get; set; }
@@ -27,6 +28,12 @@ namespace EventoSismicoApp.Entities
             Muestras = new List<MuestraSismica>();
         }
 
+        public IIterador crearIterador()
+        {
+            // Esto replica: 
+            // serieTemporal -> IteradorMuestraSismica : new(...)
+            return new IteradorMuestraSismica(this.Muestras);
+        }
 
         // Método viejo, cuando esta clase era la que consultaba el nombre de la estacion
         public List<string[]> GetSerie()
@@ -43,6 +50,8 @@ namespace EventoSismicoApp.Entities
             return lista;
         }
 
+
+        /*
         public List<string[]> GetSerie(string estacion)
         {
             var lista = new List<string[]>();
@@ -57,7 +66,37 @@ namespace EventoSismicoApp.Entities
             }
 
             return lista;
-        }
+        }*/
 
+        public List<string[]> GetSerie(string estacion)
+        {
+            var lista = new List<string[]>();
+
+            // Replicando: serieTemporal -> serieTemporal : crearIterador(...)
+            IIterador iteradorMuestras = this.crearIterador();
+
+            // Replicando: serieTemporal -> Iterador... : primero()
+            iteradorMuestras.primero();
+
+            // Replicando: loop mientras haya muestras
+            while (!iteradorMuestras.haFinalizado())
+            {
+                // Replicando: serieTemporal -> Iterador... : haFinalizado() (ya está en el while)
+
+                // Replicando: serieTemporal -> Iterador... : elementoActual(): Boolean
+                // (Ignoramos el "Boolean" y lo casteamos a MuestraSismica)
+                var muestraActual = (MuestraSismica)iteradorMuestras.elementoActual();
+
+                // Replicando: serieTemporal -> muestra : getDatos()
+                // (Que en nuestro código es muestraActual.GetDatos(estacion))
+                var datosMuestra = muestraActual.GetDatos(estacion);
+                lista.AddRange(datosMuestra);
+
+                // Replicando: serieTemporal -> Iterador... : siguiente()
+                iteradorMuestras.siguiente();
+            }
+
+            return lista;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using EventoSismicoApp.Iterador;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,7 +6,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EventoSismicoApp.Entities
 {
-    public class EventoSismico
+    public class EventoSismico : IAgregado
     {
         // Propiedades (ajustadas a los constructores)
         public DateTime FechaHoraFin { get; set; }
@@ -44,7 +45,12 @@ namespace EventoSismicoApp.Entities
             SeriesTemporales = new List<SerieTemporal>();
         }
 
-
+        public IIterador crearIterador()
+        {
+            // Esto replica: 
+            // seleccionadoES -> IteradorDatosSeriesTemporales : new(...)
+            return new IteradorDatosSeriesTemporales(this.SeriesTemporales);
+        }
 
         // Métodos actualizados:
         public bool esAutoDetectado() => this.EsAutoDetectado;
@@ -171,6 +177,70 @@ namespace EventoSismicoApp.Entities
             var datos = this.obtenerDatosSeriesTemporales();
             return (alcance, origen, clasificacion, datos);
         }
+
+        public List<string[]> obtenerDatosSeriesTemporales()
+        {
+            var datos = new List<string[]>();
+
+            // Replicando: seleccionadoES -> crearIterador()
+            IIterador iteradorSeries = this.crearIterador();
+
+            // Replicando: seleccionadoES -> Iterador... : primero()
+            iteradorSeries.primero();
+
+            // Replicando: loop mientras haya series temporales
+            while (!iteradorSeries.haFinalizado())
+            {
+                // Replicando: seleccionadoES -> Iterador... : elementoActual()
+                // (Aunque el diagrama no lo usa, lo necesitamos)
+                var serieActual = (SerieTemporal)iteradorSeries.elementoActual();
+
+                // Replicando: seleccionadoES -> serieTemporal : getSerie()
+                // (Esto es redundante, pero lo pide el diagrama.
+                // Usamos la versión de GetSerie que modificamos en el paso anterior)
+
+                // Replicando: seleccionadoES -> sismografo:getEstacion()
+                // (Esta es la lógica que metimos en el paso anterior)
+                string nombreEstacion = serieActual.Sismografo.GetEstacion().GetNombre();
+
+                // Replicando: (Implícito) serieTemporal.GetSerie(estacion)
+                // Esto es lo que hace el siguiente bloque:
+
+                // Replicando: serieTemporal -> serieTemporal : crearIterador(...)
+                IIterador iteradorMuestras = serieActual.crearIterador();
+
+                // Replicando: serieTemporal -> Iterador... : primero()
+                iteradorMuestras.primero();
+
+                // Replicando: loop mientras haya muestras
+                while (!iteradorMuestras.haFinalizado())
+                {
+                    // Replicando: serieTemporal -> Iterador... : haFinalizado() (ya está en el while)
+
+                    // Replicando: serieTemporal -> Iterador... : elementoActual(): Boolean
+                    // (Ignoramos el "Boolean" y lo casteamos a MuestraSismica)
+                    var muestraActual = (MuestraSismica)iteradorMuestras.elementoActual();
+
+                    // Replicando: serieTemporal -> muestra : getDatos()
+                    // (Que en nuestro código es muestraActual.GetDatos(estacion))
+                    var datosMuestra = muestraActual.GetDatos(nombreEstacion);
+                    datos.AddRange(datosMuestra); // <-- Lo agregamos a la lista de retorno
+
+                    // Replicando: serieTemporal -> Iterador... : siguiente()
+                    iteradorMuestras.siguiente();
+                }
+
+                // Replicando: sismografo -> estacionSismologica : getEstacion()
+                // (Esta lógica está encapsulada en serieActual.Sismografo.GetEstacion()
+                // y ya la llamamos arriba para obtener 'nombreEstacion')
+
+                // Replicando: seleccionadoES -> Iterador... : siguiente()
+                iteradorSeries.siguiente();
+            }
+
+            return datos;
+        }
+        /*
         public List<string[]> obtenerDatosSeriesTemporales()
         {
             var datos = new List<string[]>();
@@ -183,6 +253,6 @@ namespace EventoSismicoApp.Entities
             }
 
             return datos;
-        }
+        }*/
     }
 }
